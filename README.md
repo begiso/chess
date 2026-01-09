@@ -1,20 +1,40 @@
-# Aiogram 3.x Bot Template
+# Chess Position Analyzer Bot
 
-Готовый шаблон для создания Telegram-ботов на **aiogram 3.15**.
+Telegram-бот для анализа шахматных позиций по фотографии.
+
+## Как работает
+
+1. Отправьте фото шахматной доски боту
+2. Gemini Vision распознаёт позицию и конвертирует в FEN
+3. Stockfish анализирует позицию и находит лучший ход
+4. Gemini генерирует объяснение хода
+5. Получите результат с лучшим ходом и объяснением
+
+## Технологии
+
+- **aiogram 3.x** — Telegram Bot API
+- **Gemini API** — распознавание изображений и генерация объяснений
+- **Stockfish** — шахматный движок для анализа
+- **SQLite** — хранение данных пользователей и истории анализов
 
 ## Возможности
 
-- ✅ Модульная структура (handlers, middlewares, utils)
-- ✅ Router-based архитектура
-- ✅ Антифлуд middleware
-- ✅ Глобальная обработка ошибок
-- ✅ Автоматическое уведомление админов при запуске
-- ✅ Настройка команд бота
-- ✅ FSM (Finite State Machine) ready
+- Распознавание шахматной доски по фото
+- Анализ позиции с оценкой (в пешках или мат в N ходов)
+- Объяснение лучшего хода на понятном языке
+- Поддержка русского и узбекского языков
+- История анализов в базе данных
 
-## Быстрый старт
+## Установка
 
-### 1. Установка зависимостей
+### 1. Клонирование
+
+```bash
+git clone https://github.com/begiso/chess.git
+cd chess
+```
+
+### 2. Установка зависимостей
 
 ```bash
 pip install -r requirements.txt
@@ -26,7 +46,7 @@ pip install -r requirements.txt
 pipenv install
 ```
 
-### 2. Настройка
+### 3. Настройка
 
 Создайте файл `.env` на основе `.env.example`:
 
@@ -34,12 +54,15 @@ pipenv install
 cp .env.example .env
 ```
 
-Отредактируйте `.env`:
-- `BOT_TOKEN` - токен от @BotFather
-- `ADMINS` - ID администраторов (через запятую)
-- `ip` - IP адрес хоста
+Заполните `.env`:
 
-### 3. Запуск
+| Переменная | Описание |
+|------------|----------|
+| `BOT_TOKEN` | Токен бота от @BotFather |
+| `ADMINS` | ID администраторов (через запятую) |
+| `GEMINI_API_KEY` | API ключ Google Gemini |
+
+### 4. Запуск
 
 ```bash
 python app.py
@@ -48,66 +71,43 @@ python app.py
 ## Структура проекта
 
 ```
-├── app.py                      # Точка входа
-├── loader.py                   # Инициализация Bot и Dispatcher
+├── app.py                 # Точка входа
+├── loader.py              # Инициализация Bot и Dispatcher
 ├── data/
-│   └── config.py              # Конфигурация
+│   └── config.py          # Конфигурация
 ├── handlers/
-│   ├── users/                 # Обработчики для пользователей
-│   │   ├── start.py          # /start команда
-│   │   ├── help.py           # /help команда
-│   │   └── echo.py           # Эхо-бот
-│   └── errors/               # Обработка ошибок
-│       └── error_handler.py
+│   └── users/
+│       ├── start.py       # /start команда
+│       ├── help.py        # /help команда
+│       ├── language.py    # Выбор языка
+│       └── chess_analysis.py  # Обработка фото
+├── services/
+│   └── chess/
+│       ├── chess_analyzer.py      # Оркестратор анализа
+│       ├── gemini_vision_service.py   # Распознавание позиции
+│       ├── gemini_text_service.py     # Генерация объяснений
+│       └── stockfish_service.py       # Анализ Stockfish
 ├── middlewares/
-│   └── throttling.py         # Антифлуд
-├── keyboards/
-│   ├── default/              # Обычные клавиатуры
-│   └── inline/               # Inline клавиатуры
-├── filters/                  # Кастомные фильтры
-├── states/                   # FSM состояния
-└── utils/
-    ├── set_bot_commands.py   # Настройка команд
-    └── notify_admins.py      # Уведомления админам
+│   ├── throttling.py      # Антифлуд
+│   └── language_middleware.py
+├── utils/
+│   ├── db_api/            # Работа с БД
+│   └── localization/      # Локализация (ru/uz)
+└── bin/
+    └── stockfish/         # Движок Stockfish
 ```
 
-## Добавление новых handlers
+## Команды бота
 
-### Пример handler'а:
+| Команда | Описание |
+|---------|----------|
+| `/start` | Начать работу |
+| `/help` | Помощь |
+| `/language` | Сменить язык |
 
-```python
-from aiogram import Router
-from aiogram.types import Message
-from aiogram.filters import Command
+## Disclaimer
 
-router = Router()
-
-@router.message(Command("mycommand"))
-async def my_handler(message: Message):
-    await message.answer("Hello!")
-```
-
-### Подключение:
-
-В `handlers/__init__.py`:
-
-```python
-from . import my_new_handler
-
-def setup_routers() -> Router:
-    router = Router()
-    router.include_router(my_new_handler.router)
-    return router
-```
-
-## Миграция с aiogram 2.x
-
-Если у вас есть бот на aiogram 2.x, см. [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md).
-
-## Документация
-
-- [Официальная документация aiogram 3.x](https://docs.aiogram.dev/en/latest/)
-- [Примеры](https://github.com/aiogram/aiogram/tree/dev-3.x/examples)
+Бот предназначен для обучения и анализа завершённых партий. Использование во время онлайн-игр может нарушать правила игровых платформ.
 
 ## Лицензия
 
